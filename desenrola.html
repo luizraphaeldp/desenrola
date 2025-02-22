@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Desenrola - Chat Interativo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #4A90E2;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    .chat-body {
+      padding: 20px;
+      height: 400px;
+      overflow-y: auto;
+    }
+    .chat-message {
+      margin-bottom: 15px;
+      display: flex;
+    }
+    .chat-message.bot {
+      justify-content: flex-start;
+    }
+    .chat-message.user {
+      justify-content: flex-end;
+    }
+    .message-content {
+      max-width: 70%;
+      padding: 10px 15px;
+      border-radius: 20px;
+      line-height: 1.4;
+    }
+    .bot .message-content {
+      background: #e0e0e0;
+      color: #333;
+    }
+    .user .message-content {
+      background: #4A90E2;
+      color: #fff;
+    }
+    .chat-input-container {
+      padding: 15px;
+      border-top: 1px solid #ddd;
+      display: none;
+    }
+    .chat-input-container input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+    }
+    .chat-input-container button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 20px;
+      background: #4A90E2;
+      color: #fff;
+      cursor: pointer;
+    }
+    .option-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .option-buttons button {
+      flex: 1;
+      padding: 10px;
+      background: #e8f0fe;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .option-buttons button:hover {
+      background: #d0e0fd;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2>Desenrola</h2>
+      <p>Desenrole suas demandas e otimize seu tempo!</p>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <!-- Mensagens serão adicionadas aqui dinamicamente -->
+    </div>
+    <div class="chat-input-container" id="chatInputContainer">
+      <input type="text" id="chatInput" placeholder="Digite sua resposta...">
+      <button id="sendBtn">Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBody = document.getElementById('chatBody');
+    const chatInputContainer = document.getElementById('chatInputContainer');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // Variáveis para armazenar os dados coletados
+    let conversationData = {
+      category: "",
+      name: "",
+      email: "",
+      phone: "",
+      date: "",
+      time: "",
+      details: ""
+    };
+
+    // Etapas da conversa
+    const steps = [
+      {
+        id: 1,
+        message: "Olá! Bem-vindo ao Desenrola. Em que podemos ajudar?",
+        type: "options",
+        options: [
+          { label: "Organização de Agenda e Compromissos", value: "agenda" },
+          { label: "Tarefas do Dia a Dia / Assistência Geral", value: "tarefas" },
+          { label: "Consultoria de Imagem / Personal Shopper", value: "consultoria" },
+          { label: "Gerenciamento Doméstico", value: "domestico" },
+          { label: "Organização de Eventos e Festas", value: "eventos" }
+        ]
+      },
+      { id: 2, message: "Ótimo! Agora, por favor, qual é o seu nome?", type: "input", field: "name" },
+      { id: 3, message: "Qual é o seu e-mail?", type: "input", field: "email" },
+      { id: 4, message: "Digite seu telefone:", type: "input", field: "phone" },
+      { id: 5, message: "Informe a data desejada para o serviço:", type: "input", field: "date" },
+      { id: 6, message: "E o horário desejado?", type: "input", field: "time" },
+      { id: 7, message: "Por fim, descreva com mais detalhes a sua demanda:", type: "input", field: "details" },
+      { id: 8, message: "Obrigado! Seu agendamento foi realizado com sucesso. Em breve entraremos em contato.", type: "final" }
+    ];
+
+    let currentStep = 0;
+
+    // Função para adicionar mensagem no chat
+    function addMessage(content, sender = "bot") {
+      const messageEl = document.createElement('div');
+      messageEl.className = "chat-message " + sender;
+      const contentEl = document.createElement('div');
+      contentEl.className = "message-content";
+      contentEl.textContent = content;
+      messageEl.appendChild(contentEl);
+      chatBody.appendChild(messageEl);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    // Função para renderizar a etapa atual
+    function renderStep() {
+      const step = steps[currentStep];
+      if (!step) return;
+
+      addMessage(step.message, "bot");
+
+      // Se a etapa for de opções, renderiza os botões
+      if (step.type === "options") {
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = "option-buttons";
+        step.options.forEach(option => {
+          const btn = document.createElement('button');
+          btn.textContent = option.label;
+          btn.onclick = () => {
+            conversationData.category = option.value;
+            addMessage(option.label, "user");
+            currentStep++;
+            setTimeout(renderStep, 500);
+          };
+          optionsContainer.appendChild(btn);
+        });
+        chatBody.appendChild(optionsContainer);
+        chatBody.scrollTop = chatBody.scrollHeight;
+      } else if (step.type === "input") {
+        // Mostra o campo de input e foca nele
+        chatInputContainer.style.display = "block";
+        chatInput.placeholder = "Digite aqui...";
+        chatInput.focus();
+      } else if (step.type === "final") {
+        // Oculta o input se houver
+        chatInputContainer.style.display = "none";
+      }
+    }
+
+    // Evento do botão de envio
+    sendBtn.addEventListener('click', () => {
+      const step = steps[currentStep];
+      const value = chatInput.value.trim();
+      if (value === "") return;
+      // Armazena a resposta no campo correspondente
+      conversationData[step.field] = value;
+      addMessage(value, "user");
+      chatInput.value = "";
+      chatInputContainer.style.display = "none";
+      currentStep++;
+      setTimeout(renderStep, 500);
+    });
+
+    // Inicia a conversa
+    renderStep();
+  </script>
+
+</body>
+</html>
