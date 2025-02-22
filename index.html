@@ -3,21 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Desenrola - Chat Interativo</title>
+  <title>Desenrola - Assistente Pessoal para Mães</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-    }
-    .chat-container {
+    /* Reset e estilos básicos */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Arial', sans-serif; background: #f6f6f6; color: #333; }
+    a { text-decoration: none; color: inherit; }
+    
+    /* Estilo da Landing Page */
+    .landing-container {
       width: 100%;
-      max-width: 600px;
-      margin: 50px auto;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #4A90E2 0%, #50E3C2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    header { text-align: center; margin-bottom: 30px; }
+    header h1 { font-size: 2.5em; color: #fff; }
+    header p { font-size: 1.2em; color: #e0e0e0; }
+    .hero-image {
+      width: 100%;
+      max-width: 500px;
+      margin: 20px 0;
+    }
+    .cta-btn {
       background: #fff;
+      color: #4A90E2;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 30px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .cta-btn:hover { background: #e0e0e0; }
+    .benefits {
+      margin-top: 40px;
+      background: #fff;
+      width: 100%;
+      max-width: 800px;
       border-radius: 8px;
-      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-      overflow: hidden;
+      padding: 30px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .benefits h2 { margin-bottom: 20px; }
+    .benefits ul { list-style: none; }
+    .benefits li { margin-bottom: 15px; font-size: 1.1em; }
+    footer {
+      margin-top: 40px;
+      color: #fff;
+      font-size: 0.9em;
+    }
+    
+    /* Estilo do Chat Interativo (App) */
+    .chat-container {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100%;
+      max-width: 400px;
+      height: 100%;
+      background: #fff;
+      box-shadow: -4px 0 10px rgba(0,0,0,0.1);
+      transform: translateX(100%);
+      transition: transform 0.5s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-container.active {
+      transform: translateX(0);
     }
     .chat-header {
       background: #4A90E2;
@@ -26,20 +83,16 @@
       text-align: center;
     }
     .chat-body {
+      flex: 1;
       padding: 20px;
-      height: 400px;
       overflow-y: auto;
     }
     .chat-message {
       margin-bottom: 15px;
       display: flex;
     }
-    .chat-message.bot {
-      justify-content: flex-start;
-    }
-    .chat-message.user {
-      justify-content: flex-end;
-    }
+    .chat-message.bot { justify-content: flex-start; }
+    .chat-message.user { justify-content: flex-end; }
     .message-content {
       max-width: 70%;
       padding: 10px 15px;
@@ -97,13 +150,35 @@
 </head>
 <body>
 
-  <div class="chat-container">
+  <!-- Landing Page -->
+  <div class="landing-container" id="landingPage">
+    <header>
+      <h1>Desenrola</h1>
+      <p>Cuide do que importa: sua família, enquanto nós desenrolamos as tarefas do dia a dia.</p>
+    </header>
+    <img src="https://via.placeholder.com/500x300?text=M%C3%A3e+Feliz+com+Filhos" alt="Mãe com Filhos" class="hero-image">
+    <button class="cta-btn" id="startChatBtn">Experimente Agora</button>
+    <div class="benefits">
+      <h2>Por que escolher o Desenrola?</h2>
+      <ul>
+        <li>Economize tempo e reduza o estresse diário</li>
+        <li>Organização e gestão de tarefas domésticas e eventos</li>
+        <li>Apoio personalizado para a rotina familiar</li>
+        <li>Profissionais confiáveis e qualificados</li>
+      </ul>
+    </div>
+    <footer>
+      <p>© 2025 Desenrola. Todos os direitos reservados.</p>
+    </footer>
+  </div>
+
+  <!-- Chat Interativo (App) -->
+  <div class="chat-container" id="chatContainer">
     <div class="chat-header">
-      <h2>Desenrola</h2>
-      <p>Desenrole suas demandas e otimize seu tempo!</p>
+      <h2>Desenrola - Chat</h2>
     </div>
     <div class="chat-body" id="chatBody">
-      <!-- Mensagens serão adicionadas aqui dinamicamente -->
+      <!-- Mensagens serão adicionadas dinamicamente -->
     </div>
     <div class="chat-input-container" id="chatInputContainer">
       <input type="text" id="chatInput" placeholder="Digite sua resposta...">
@@ -112,12 +187,25 @@
   </div>
 
   <script>
+    // Variáveis para transição entre landing e chat
+    const startChatBtn = document.getElementById('startChatBtn');
+    const landingPage = document.getElementById('landingPage');
+    const chatContainer = document.getElementById('chatContainer');
+
+    startChatBtn.addEventListener('click', () => {
+      // Esconde a landing page e mostra o chat
+      landingPage.style.display = "none";
+      chatContainer.classList.add('active');
+      startConversation();
+    });
+
+    // Variáveis para o chat interativo
     const chatBody = document.getElementById('chatBody');
     const chatInputContainer = document.getElementById('chatInputContainer');
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendBtn');
 
-    // Variáveis para armazenar os dados coletados
+    // Dados da conversa
     let conversationData = {
       category: "",
       name: "",
@@ -128,11 +216,11 @@
       details: ""
     };
 
-    // Etapas da conversa
+    // Etapas do chat
     const steps = [
       {
         id: 1,
-        message: "Olá! Bem-vindo ao Desenrola. Em que podemos ajudar?",
+        message: "Olá! Sou a Larissa, sua consultora do Desenrola. Como posso te ajudar hoje?",
         type: "options",
         options: [
           { label: "Organização de Agenda e Compromissos", value: "agenda" },
@@ -142,18 +230,17 @@
           { label: "Organização de Eventos e Festas", value: "eventos" }
         ]
       },
-      { id: 2, message: "Ótimo! Agora, por favor, qual é o seu nome?", type: "input", field: "name" },
-      { id: 3, message: "Qual é o seu e-mail?", type: "input", field: "email" },
-      { id: 4, message: "Digite seu telefone:", type: "input", field: "phone" },
-      { id: 5, message: "Informe a data desejada para o serviço:", type: "input", field: "date" },
-      { id: 6, message: "E o horário desejado?", type: "input", field: "time" },
-      { id: 7, message: "Por fim, descreva com mais detalhes a sua demanda:", type: "input", field: "details" },
-      { id: 8, message: "Obrigado! Seu agendamento foi realizado com sucesso. Em breve entraremos em contato.", type: "final" }
+      { id: 2, message: "Perfeito! Qual é o seu nome?", type: "input", field: "name" },
+      { id: 3, message: "Agora, me informe seu e-mail:", type: "input", field: "email" },
+      { id: 4, message: "Qual seu telefone para contato?", type: "input", field: "phone" },
+      { id: 5, message: "Qual a data desejada para o serviço?", type: "input", field: "date" },
+      { id: 6, message: "E o horário que você prefere?", type: "input", field: "time" },
+      { id: 7, message: "Conte-me um pouco mais sobre a sua necessidade:", type: "input", field: "details" },
+      { id: 8, message: "Obrigada! Seu agendamento foi realizado com sucesso. Em breve entrarei em contato.", type: "final" }
     ];
 
     let currentStep = 0;
 
-    // Função para adicionar mensagem no chat
     function addMessage(content, sender = "bot") {
       const messageEl = document.createElement('div');
       messageEl.className = "chat-message " + sender;
@@ -165,14 +252,12 @@
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    // Função para renderizar a etapa atual
     function renderStep() {
       const step = steps[currentStep];
       if (!step) return;
 
       addMessage(step.message, "bot");
 
-      // Se a etapa for de opções, renderiza os botões
       if (step.type === "options") {
         const optionsContainer = document.createElement('div');
         optionsContainer.className = "option-buttons";
@@ -190,22 +275,18 @@
         chatBody.appendChild(optionsContainer);
         chatBody.scrollTop = chatBody.scrollHeight;
       } else if (step.type === "input") {
-        // Mostra o campo de input e foca nele
-        chatInputContainer.style.display = "block";
+        chatInputContainer.style.display = "flex";
         chatInput.placeholder = "Digite aqui...";
         chatInput.focus();
       } else if (step.type === "final") {
-        // Oculta o input se houver
         chatInputContainer.style.display = "none";
       }
     }
 
-    // Evento do botão de envio
     sendBtn.addEventListener('click', () => {
       const step = steps[currentStep];
       const value = chatInput.value.trim();
-      if (value === "") return;
-      // Armazena a resposta no campo correspondente
+      if(value === "") return;
       conversationData[step.field] = value;
       addMessage(value, "user");
       chatInput.value = "";
@@ -214,8 +295,9 @@
       setTimeout(renderStep, 500);
     });
 
-    // Inicia a conversa
-    renderStep();
+    function startConversation() {
+      renderStep();
+    }
   </script>
 
 </body>
